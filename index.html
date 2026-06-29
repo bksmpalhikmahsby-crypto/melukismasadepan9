@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melukis Masa Depan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F6F1E7;
+  --ink:#2B2118;
+  --ink-soft:#6B5D4F;
+  --line:#DCD2BE;
+  --teal:#2F6F62;
+  --teal-deep:#1E4B41;
+  --terracotta:#C1622E;
+  --terracotta-deep:#8C4520;
+  --gold:#C99A3A;
+  --card:#FFFDF8;
+  --error:#B3432B;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--canvas);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  line-height:1.55;
+}
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px;}
+.brushline{height:6px;border-radius:6px;background:linear-gradient(90deg,var(--terracotta),var(--gold),var(--teal));margin-bottom:28px;}
+header.hero{margin-bottom:32px;}
+header.hero .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--terracotta-deep);font-weight:600;margin-bottom:6px;}
+header.hero h1{font-family:'Fraunces',serif;font-size:38px;font-weight:600;margin:0 0 10px;line-height:1.1;}
+header.hero p{color:var(--ink-soft);font-size:15px;max-width:540px;margin:0;}
+.progress{display:flex;gap:8px;margin:26px 0 0;}
+.progress div{flex:1;height:4px;border-radius:4px;background:var(--line);}
+.progress div.active{background:var(--terracotta);}
+.progress div.done{background:var(--teal);}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px;margin-bottom:20px;}
+.card h2{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:0 0 4px;}
+.card .sub{color:var(--ink-soft);font-size:14px;margin:0 0 22px;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--ink-soft);margin-bottom:6px;}
+.field input,.field select{
+  width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;
+  font-size:15px;font-family:inherit;background:#fff;color:var(--ink);
+}
+.field input:focus,.field select:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+.readonly{background:var(--canvas);color:var(--ink-soft);}
+
+.choice-tabs{display:flex;gap:10px;margin-bottom:20px;}
+.choice-tabs button{
+  flex:1;padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff;
+  font-family:inherit;font-size:14px;font-weight:500;color:var(--ink-soft);cursor:pointer;
+}
+.choice-tabs button.active{border-color:var(--terracotta);background:#FBEFE6;color:var(--terracotta-deep);}
+
+.pick-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;max-height:340px;overflow-y:auto;padding-right:4px;}
+@media(max-width:600px){.pick-grid{grid-template-columns:1fr 1fr;}}
+.pick-card{
+  border:1px solid var(--line);border-radius:10px;padding:12px 10px;text-align:left;background:#fff;
+  cursor:pointer;font-family:inherit;font-size:13.5px;color:var(--ink);
+}
+.pick-card .kat{display:block;font-size:11px;color:var(--ink-soft);margin-top:3px;}
+.pick-card.selected{border-color:var(--teal);background:#EBF4F1;}
+.pick-card.selected .kat{color:var(--teal-deep);}
+
+.actions{display:flex;justify-content:space-between;gap:10px;margin-top:8px;}
+button.btn{
+  font-family:inherit;font-size:14.5px;font-weight:500;padding:12px 22px;border-radius:9px;cursor:pointer;border:none;
+}
+button.btn.primary{background:var(--terracotta);color:#fff;}
+button.btn.primary:hover{background:var(--terracotta-deep);}
+button.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink-soft);}
+button.btn.ghost:hover{border-color:var(--ink-soft);}
+button.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+.result-block{border-top:1px solid var(--line);padding-top:18px;margin-top:6px;}
+.result-row{display:grid;grid-template-columns:170px 1fr;gap:6px 16px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;}
+.result-row:last-child{border-bottom:none;}
+.result-row .lbl{color:var(--terracotta-deep);font-weight:600;font-size:13px;letter-spacing:.02em;text-transform:uppercase;}
+.result-row .val{color:var(--ink);}
+.idrecap{font-size:13.5px;color:var(--ink-soft);margin-bottom:18px;}
+.idrecap b{color:var(--ink);}
+
+.error{color:var(--error);font-size:13px;margin-top:4px;}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--teal-deep);color:#fff;padding:10px 18px;border-radius:30px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50;}
+.toast.show{opacity:1;}
+
+.linklike{background:none;border:none;color:var(--ink-soft);font-size:12.5px;text-decoration:underline;cursor:pointer;font-family:inherit;padding:0;}
+footer.note{text-align:center;margin-top:36px;color:var(--ink-soft);font-size:12px;}
+
+table.rekap{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:14px;}
+table.rekap th,table.rekap td{border:1px solid var(--line);padding:6px 8px;text-align:left;}
+table.rekap th{background:var(--canvas);}
+
+@media print{
+  body{background:#fff;}
+  .wrap{max-width:100%;padding:10px 20px;}
+  .no-print{display:none !important;}
+  .card{box-shadow:none;border:1px solid #999;}
+  .brushline{background:#999;}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CITACITA_DB = [
+{n:"Dokter Umum",k:"Kesehatan",sma:"MIPA / IPA",smk:"Keperawatan, Farmasi",ked:"Poltekkes Kemenkes (jenjang lanjut pasca SMA)",pon:"Pondok dengan program sains terpadu",kul:"Kedokteran, Pendidikan Dokter"},
+{n:"Dokter Gigi",k:"Kesehatan",sma:"MIPA / IPA",smk:"Keperawatan, Farmasi",ked:"Poltekkes Kemenkes",pon:"Pondok dengan program sains terpadu",kul:"Kedokteran Gigi"},
+{n:"Dokter Hewan",k:"Kesehatan",sma:"MIPA / IPA",smk:"Agribisnis Ternak, Kesehatan Hewan",ked:"-",pon:"Pondok dengan program sains/pertanian",kul:"Kedokteran Hewan"},
+{n:"Perawat",k:"Kesehatan",sma:"MIPA / IPA",smk:"Keperawatan",ked:"Poltekkes Kemenkes",pon:"Pondok dengan program sains terpadu",kul:"Ilmu Keperawatan"},
+{n:"Bidan",k:"Kesehatan",sma:"MIPA / IPA",smk:"Keperawatan, Kebidanan",ked:"Poltekkes Kemenkes",pon:"Pondok dengan program sains terpadu",kul:"Kebidanan"},
+{n:"Apoteker",k:"Kesehatan",sma:"MIPA / IPA",smk:"Farmasi",ked:"Poltekkes Kemenkes",pon:"Pondok dengan program sains terpadu",kul:"Farmasi"},
+{n:"Ahli Gizi",k:"Kesehatan",sma:"MIPA / IPA",smk:"Tata Boga, Farmasi",ked:"Poltekkes Kemenkes",pon:"Pondok dengan program sains terpadu",kul:"Ilmu Gizi"},
+{n:"Psikolog",k:"Kesehatan & Sosial",sma:"IPS / MIPA",smk:"-",ked:"-",pon:"Pondok dengan program sains sosial",kul:"Psikologi"},
+{n:"Guru / Pendidik",k:"Pendidikan",sma:"IPS / MIPA / Bahasa",smk:"-",ked:"-",pon:"Pondok dengan program kependidikan/tahfiz",kul:"Pendidikan (sesuai mapel), Keguruan"},
+{n:"Dosen",k:"Pendidikan",sma:"MIPA / IPS / Bahasa",smk:"-",ked:"-",pon:"Pondok dengan program sains/keagamaan",kul:"Sesuai bidang ilmu (S1 lalu lanjut S2)"},
+{n:"Polisi",k:"Hukum & Keamanan",sma:"IPS / MIPA",smk:"Teknik Kendaraan, Multimedia",ked:"Akademi Kepolisian (Akpol)",pon:"Pondok dengan kedisiplinan tinggi",kul:"Ilmu Kepolisian, Hukum (jalur umum)"},
+{n:"TNI (AD/AL/AU)",k:"Hukum & Keamanan",sma:"IPS / MIPA",smk:"Teknik, Penerbangan, Pelayaran",ked:"Akademi Militer / AAL / AAU",pon:"Pondok dengan kedisiplinan tinggi",kul:"-"},
+{n:"Pengacara",k:"Hukum & Keamanan",sma:"IPS",smk:"-",ked:"-",pon:"Pondok dengan program tahfiz/syariah",kul:"Ilmu Hukum"},
+{n:"Hakim / Jaksa",k:"Hukum & Keamanan",sma:"IPS",smk:"-",ked:"Sekolah Tinggi Hukum Militer (jenjang lanjut)",pon:"Pondok dengan program tahfiz/syariah",kul:"Ilmu Hukum"},
+{n:"Diplomat",k:"Hukum & Pemerintahan",sma:"IPS / Bahasa",smk:"-",ked:"-",pon:"Pondok dengan penguatan bahasa asing",kul:"Hubungan Internasional"},
+{n:"PNS / ASN Pemerintahan",k:"Pemerintahan",sma:"IPS",smk:"Administrasi Perkantoran",ked:"Politeknik STAN, IPDN, Poltek Statistika STIS",pon:"Pondok dengan program umum/administrasi",kul:"Administrasi Publik, Ilmu Pemerintahan"},
+{n:"Petugas Pajak / Keuangan Negara",k:"Pemerintahan",sma:"IPS / MIPA",smk:"Akuntansi",ked:"Politeknik Keuangan Negara STAN",pon:"Pondok dengan program umum",kul:"Akuntansi, Ilmu Ekonomi"},
+{n:"Ahli Statistik",k:"Pemerintahan & Sains",sma:"MIPA",smk:"-",ked:"Politeknik Statistika STIS",pon:"Pondok dengan program sains terpadu",kul:"Statistika"},
+{n:"Insinyur Sipil",k:"Teknik",sma:"MIPA",smk:"Teknik Konstruksi & Properti",ked:"-",pon:"Pondok dengan program sains terpadu",kul:"Teknik Sipil"},
+{n:"Arsitek",k:"Teknik & Seni",sma:"MIPA",smk:"Desain Pemodelan & Informasi Bangunan",ked:"-",pon:"Pondok dengan program sains/seni",kul:"Arsitektur"},
+{n:"Insinyur Mesin / Otomotif",k:"Teknik",sma:"MIPA",smk:"Teknik Kendaraan Ringan, Teknik Mesin",ked:"-",pon:"Pondok dengan program sains terpadu",kul:"Teknik Mesin"},
+{n:"Insinyur Elektro / Listrik",k:"Teknik",sma:"MIPA",smk:"Teknik Instalasi Tenaga Listrik",ked:"-",pon:"Pondok dengan program sains terpadu",kul:"Teknik Elektro"},
+{n:"Teknisi Otomotif",k:"Teknik",sma:"MIPA (opsional)",smk:"Teknik Kendaraan Ringan/Sepeda Motor",ked:"-",pon:"-",kul:"Teknik Otomotif (D3/D4 opsional)"},
+{n:"Teknisi Listrik / Elektronik",k:"Teknik",sma:"MIPA (opsional)",smk:"Teknik Elektronika, Instalasi Tenaga Listrik",ked:"-",pon:"-",kul:"Teknik Elektro (D3/D4 opsional)"},
+{n:"Programmer / Software Developer",k:"Teknologi",sma:"MIPA",smk:"Rekayasa Perangkat Lunak, Teknik Informatika",ked:"-",pon:"Pondok dengan program sains/IT",kul:"Ilmu Komputer, Teknik Informatika, Sistem Informasi"},
+{n:"Ahli Keamanan Siber",k:"Teknologi",sma:"MIPA",smk:"Teknik Komputer & Jaringan",ked:"Politeknik Siber dan Sandi Negara (BSSN)",pon:"Pondok dengan program sains/IT",kul:"Ilmu Komputer, Keamanan Siber"},
+{n:"Data Scientist / Analis Data",k:"Teknologi",sma:"MIPA",smk:"Rekayasa Perangkat Lunak",ked:"Politeknik Statistika STIS",pon:"Pondok dengan program sains/IT",kul:"Statistika, Ilmu Komputer, Matematika"},
+{n:"Desainer Grafis",k:"Teknologi & Seni",sma:"bebas",smk:"Desain Komunikasi Visual",ked:"-",pon:"Pondok dengan program seni/umum",kul:"Desain Komunikasi Visual"},
+{n:"Animator",k:"Teknologi & Seni",sma:"bebas",smk:"Animasi",ked:"-",pon:"Pondok dengan program seni/umum",kul:"Animasi, Desain Komunikasi Visual"},
+{n:"Akuntan",k:"Bisnis & Ekonomi",sma:"IPS",smk:"Akuntansi dan Keuangan Lembaga",ked:"Politeknik Keuangan Negara STAN",pon:"Pondok dengan program umum/ekonomi syariah",kul:"Akuntansi"},
+{n:"Pengusaha / Wirausaha",k:"Bisnis & Ekonomi",sma:"bebas",smk:"Bisnis Daring & Pemasaran",ked:"-",pon:"Pondok dengan program ekonomi syariah/kemandirian",kul:"Manajemen, Bisnis"},
+{n:"Pegawai Bank",k:"Bisnis & Ekonomi",sma:"IPS",smk:"Akuntansi dan Keuangan Lembaga, Perbankan",ked:"Politeknik Keuangan Negara STAN",pon:"Pondok dengan program ekonomi syariah",kul:"Manajemen, Akuntansi, Ekonomi"},
+{n:"Manajer Pemasaran",k:"Bisnis & Ekonomi",sma:"IPS",smk:"Bisnis Daring & Pemasaran",ked:"-",pon:"Pondok dengan program ekonomi/umum",kul:"Manajemen, Ilmu Komunikasi"},
+{n:"Chef / Koki",k:"Kuliner",sma:"bebas",smk:"Tata Boga, Kuliner",ked:"-",pon:"Pondok dengan keterampilan vokasi",kul:"Tata Boga, Pariwisata"},
+{n:"Pilot",k:"Penerbangan",sma:"MIPA",smk:"Teknika Pesawat Udara, Aviasi",ked:"Sekolah Penerbangan (jenjang lanjut)",pon:"Pondok dengan program sains terpadu",kul:"Sekolah Tinggi Penerbangan"},
+{n:"Pramugari / Pramugara",k:"Penerbangan",sma:"bebas",smk:"Perhotelan, Aviasi",ked:"-",pon:"-",kul:"Pariwisata, Aviasi"},
+{n:"Masinis Kereta",k:"Transportasi",sma:"bebas",smk:"Teknik Mekanik Industri, Perkeretaapian",ked:"Politeknik Perkeretaapian Indonesia",pon:"-",kul:"Teknik Perkeretaapian"},
+{n:"Pelaut / ABK",k:"Kemaritiman",sma:"MIPA",smk:"Pelayaran Kapal Niaga/Penangkapan Ikan",ked:"Politeknik Pelayaran",pon:"-",kul:"Ilmu Kelautan, Pelayaran"},
+{n:"Operator Alat Berat / Tambang",k:"Teknik",sma:"MIPA",smk:"Teknik Alat Berat, Geologi Pertambangan",ked:"-",pon:"-",kul:"Teknik Pertambangan, Teknik Geologi"},
+{n:"Atlet",k:"Olahraga",sma:"bebas (sekolah berbasis olahraga jika ada)",smk:"-",ked:"Sekolah Khusus Olahragawan bila tersedia",pon:"-",kul:"Ilmu Keolahragaan"},
+{n:"Pelatih Olahraga",k:"Olahraga",sma:"bebas",smk:"-",ked:"-",pon:"-",kul:"Pendidikan Jasmani, Ilmu Keolahragaan"},
+{n:"Seniman / Pelukis",k:"Seni",sma:"bebas",smk:"Seni Rupa",ked:"-",pon:"Pondok dengan program seni/umum",kul:"Seni Rupa"},
+{n:"Musisi",k:"Seni",sma:"bebas",smk:"Seni Musik",ked:"-",pon:"Pondok dengan program seni/umum",kul:"Seni Musik"},
+{n:"Penyanyi",k:"Seni",sma:"bebas",smk:"Seni Musik, Seni Pertunjukan",ked:"-",pon:"-",kul:"Seni Musik, Seni Pertunjukan"},
+{n:"Aktor / Artis",k:"Seni",sma:"bebas",smk:"Seni Teater",ked:"-",pon:"-",kul:"Seni Teater, Ilmu Komunikasi"},
+{n:"Penulis / Novelis",k:"Bahasa & Komunikasi",sma:"Bahasa / IPS",smk:"-",ked:"-",pon:"Pondok dengan penguatan bahasa/sastra",kul:"Sastra, Ilmu Komunikasi"},
+{n:"Jurnalis / Wartawan",k:"Bahasa & Komunikasi",sma:"IPS / Bahasa",smk:"Produksi & Penyiaran Pertelevisian",ked:"-",pon:"Pondok dengan penguatan bahasa",kul:"Ilmu Komunikasi, Jurnalistik"},
+{n:"Fotografer",k:"Seni & Komunikasi",sma:"bebas",smk:"Multimedia, Produksi Film",ked:"-",pon:"-",kul:"Fotografi, Desain Komunikasi Visual"},
+{n:"Penerjemah",k:"Bahasa",sma:"Bahasa",smk:"-",ked:"-",pon:"Pondok dengan penguatan bahasa asing",kul:"Sastra / Bahasa Asing"},
+{n:"YouTuber / Konten Kreator",k:"Media Digital",sma:"bebas",smk:"Multimedia, Produksi Film",ked:"-",pon:"-",kul:"Ilmu Komunikasi, Desain Komunikasi Visual"},
+{n:"Desainer Fashion",k:"Seni & Kreatif",sma:"bebas",smk:"Tata Busana",ked:"-",pon:"Pondok dengan keterampilan vokasi",kul:"Desain Fashion"},
+{n:"Make-up Artist",k:"Seni & Kreatif",sma:"bebas",smk:"Tata Kecantikan",ked:"-",pon:"-",kul:"-"},
+{n:"Petani / Ahli Agribisnis",k:"Pertanian",sma:"MIPA / IPS",smk:"Agribisnis Tanaman",ked:"Polbangtan (Politeknik Pembangunan Pertanian)",pon:"Pondok dengan program pertanian/kemandirian",kul:"Agribisnis, Agroteknologi"},
+{n:"Peternak",k:"Pertanian",sma:"MIPA",smk:"Agribisnis Ternak",ked:"Polbangtan",pon:"Pondok dengan program pertanian/kemandirian",kul:"Peternakan"},
+{n:"Nelayan / Ahli Perikanan",k:"Kemaritiman",sma:"MIPA",smk:"Agribisnis Perikanan",ked:"Politeknik Kelautan dan Perikanan (KKP)",pon:"-",kul:"Ilmu Kelautan, Perikanan"},
+{n:"Ahli Geologi / Tambang",k:"Sains & Teknik",sma:"MIPA",smk:"Geologi Pertambangan",ked:"-",pon:"Pondok dengan program sains terpadu",kul:"Teknik Geologi, Teknik Pertambangan"},
+{n:"Peneliti / Ilmuwan",k:"Sains",sma:"MIPA",smk:"-",ked:"-",pon:"Pondok dengan program sains terpadu",kul:"Sesuai bidang sains (Fisika, Kimia, Biologi, dst)"},
+{n:"Ustadz / Ustadzah / Da'i",k:"Keagamaan",sma:"Keagamaan (MA) / bebas",smk:"-",ked:"-",pon:"Pondok dengan program tahfiz/dakwah/kitab kuning",kul:"Pendidikan Agama Islam, Ilmu Al-Qur'an dan Tafsir"},
+{n:"Penghafal Al-Qur'an (Hafiz/Hafizah)",k:"Keagamaan",sma:"Keagamaan (MA) / bebas",smk:"-",ked:"-",pon:"Pondok tahfiz dengan target hafalan terstruktur",kul:"Ilmu Al-Qur'an dan Tafsir"},
+{n:"Pemuka Agama (lintas keyakinan)",k:"Keagamaan",sma:"bebas",smk:"-",ked:"-",pon:"Sekolah/asrama keagamaan sesuai keyakinan",kul:"Ilmu Keagamaan sesuai bidang"},
+];
+
+const BIDANG_DB = [
+{n:"Sains & penelitian — suka mengamati, eksperimen, bertanya \"kenapa\"",k:"Sains",sma:"MIPA",smk:"Teknik / Kimia Industri",ked:"Politeknik Statistika STIS / Poltek sains terapan",pon:"Pondok dengan program sains terpadu",kul:"Sains murni (Fisika, Kimia, Biologi), Kedokteran, Teknik"},
+{n:"Teknologi & komputer — suka coding, gadget, dunia digital",k:"Teknologi",sma:"MIPA",smk:"Rekayasa Perangkat Lunak, Teknik Komputer & Jaringan",ked:"Politeknik Siber dan Sandi Negara",pon:"Pondok dengan program sains/IT",kul:"Ilmu Komputer, Sistem Informasi, Teknik Informatika"},
+{n:"Seni & desain — suka menggambar, desain, musik, drama",k:"Seni",sma:"bebas",smk:"Seni Rupa, Desain Komunikasi Visual, Seni Musik",ked:"-",pon:"Pondok dengan program seni/umum",kul:"Seni Rupa, DKV, Seni Musik"},
+{n:"Olahraga & fisik — suka bergerak, kompetisi, latihan fisik",k:"Olahraga",sma:"bebas",smk:"-",ked:"Sekolah Khusus Olahragawan bila tersedia",pon:"-",kul:"Ilmu Keolahragaan, Pendidikan Jasmani"},
+{n:"Sosial & membantu orang — suka mendengarkan, peduli, mengajar",k:"Sosial",sma:"IPS / MIPA",smk:"Keperawatan, Pekerja Sosial",ked:"-",pon:"Pondok dengan program sains sosial/dakwah",kul:"Psikologi, Keperawatan, Pendidikan, Kesejahteraan Sosial"},
+{n:"Bisnis & kewirausahaan — suka jualan, mengatur uang, ide usaha",k:"Bisnis",sma:"IPS",smk:"Bisnis Daring & Pemasaran, Akuntansi",ked:"Politeknik Keuangan Negara STAN",pon:"Pondok dengan program ekonomi syariah",kul:"Manajemen, Akuntansi, Bisnis"},
+{n:"Bahasa & komunikasi — suka menulis, bicara di depan umum, bahasa asing",k:"Bahasa",sma:"Bahasa / IPS",smk:"Produksi & Penyiaran Pertelevisian",ked:"-",pon:"Pondok dengan penguatan bahasa asing",kul:"Sastra, Ilmu Komunikasi, Hubungan Internasional"},
+{n:"Alam & lingkungan — suka tumbuhan, hewan, lingkungan luar",k:"Lingkungan",sma:"MIPA",smk:"Agribisnis Tanaman/Ternak, Kehutanan",ked:"Polbangtan, Politeknik Kelautan dan Perikanan",pon:"Pondok dengan program pertanian",kul:"Agroteknologi, Kehutanan, Ilmu Kelautan"},
+{n:"Agama & spiritual — suka mengaji, kajian, kehidupan keagamaan",k:"Keagamaan",sma:"Keagamaan (MA) / bebas",smk:"-",ked:"-",pon:"Pondok tahfiz/kitab kuning",kul:"Ilmu Al-Qur'an dan Tafsir, Pendidikan Agama Islam"},
+{n:"Hitung & logika — suka matematika, teka-teki, sistem",k:"Sains & Logika",sma:"MIPA",smk:"Akuntansi, Teknik Informatika",ked:"Politeknik Statistika STIS",pon:"Pondok dengan program sains terpadu",kul:"Matematika, Statistika, Aktuaria, Ilmu Komputer"},
+{n:"Bangunan & kerajinan tangan — suka merakit, memperbaiki, membuat sesuatu",k:"Teknik Vokasi",sma:"MIPA (opsional)",smk:"Teknik Konstruksi, Teknik Mesin, Teknik Otomotif",ked:"-",pon:"-",kul:"Teknik Sipil, Teknik Mesin, Arsitektur"},
+{n:"Memasak & kuliner — suka memasak, mencoba resep baru",k:"Kuliner",sma:"bebas",smk:"Tata Boga",ked:"-",pon:"Pondok dengan keterampilan vokasi",kul:"Tata Boga, Pariwisata"},
+];
+
+// Tempel URL Web App Apps Script di sini setelah deploy (lihat panduan setup).
+// Contoh: "https://script.google.com/macros/s/AKfycb.../exec"
+const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwUsAj7n1b2tDTOa_C-7wJHuNQx3t_OjghVaDlscOfzwAWA6ThQK6zJSu0_SmPK4ug/exec";
+
+// Akses rekap dibuka cukup lewat ?bk=1 di akhir URL, tanpa PIN.
+
+function isBkMode(){
+  try{ return new URLSearchParams(window.location.search).get("bk") === "1"; }catch(e){ return false; }
+}
+
+let state = {
+  step: 0,
+  id: { nama:"", panggilan:"", absen:"", kelas:"", jk:"", tglPelaksanaan: new Date().toISOString().slice(0,10), tglLahir:"" },
+  mode: null,
+  pilihan: null,
+  savedKey: null,
+  view: "app"
+};
+
+function usia(tglLahir, tglPelaksanaan){
+  if(!tglLahir || !tglPelaksanaan) return "";
+  const a = new Date(tglLahir), b = new Date(tglPelaksanaan);
+  if(isNaN(a) || isNaN(b) || a > b) return "";
+  let years = b.getFullYear() - a.getFullYear();
+  let months = b.getMonth() - a.getMonth();
+  if(b.getDate() < a.getDate()) months--;
+  if(months < 0){ years--; months += 12; }
+  return years + " tahun " + months + " bulan";
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function el(html){
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  return d.firstElementChild;
+}
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = "";
+  if(isBkMode()){
+    state.view = "rekap";
+    app.appendChild(renderRekap());
+    return;
+  }
+  if(state.view === "rekap") state.view = "app";
+  app.appendChild(renderHeader());
+  if(state.step === 0) app.appendChild(renderIdentitas());
+  if(state.step === 1) app.appendChild(renderEksplorasi());
+  if(state.step === 2) app.appendChild(renderHasil());
+  app.appendChild(renderFooter());
+}
+
+function renderHeader(){
+  const wrap = document.createElement('div');
+  wrap.className = "no-print";
+  wrap.innerHTML = `
+    <div class="brushline"></div>
+    <header class="hero">
+      <div class="eyebrow">Bimbingan Konseling &middot; Kelas 9</div>
+      <h1>Melukis Masa Depan</h1>
+      <p>Setiap warna yang kamu pilih hari ini membantu menggambar arah masa depanmu. Yuk, mulai melukis langkah pertamamu menuju SMA, SMK, sekolah kedinasan, pondok pesantren, atau jalur kuliahmu nanti.</p>
+    </header>
+    <div class="progress">
+      <div class="${state.step>=0?'active':''} ${state.step>0?'done':''}"></div>
+      <div class="${state.step>=1?'active':''} ${state.step>1?'done':''}"></div>
+      <div class="${state.step>=2?'active':''}"></div>
+    </div>
+  `;
+  return wrap;
+}
+
+function renderIdentitas(){
+  const c = el(`<div class="card"></div>`);
+  c.innerHTML = `
+    <h2>Identitas siswa</h2>
+    <p class="sub">Isi datamu dulu sebelum mulai melukis masa depan.</p>
+    <div class="grid2">
+      <div class="field"><label>Nama lengkap</label><input id="f-nama" value="${state.id.nama}" placeholder="Nama lengkap sesuai rapor"></div>
+      <div class="field"><label>Nama panggilan</label><input id="f-panggilan" value="${state.id.panggilan}" placeholder="Nama panggilan"></div>
+      <div class="field"><label>No. absen</label><input id="f-absen" value="${state.id.absen}" placeholder="Contoh: 12"></div>
+      <div class="field"><label>Kelas</label>
+        <select id="f-kelas">
+          <option value="">Pilih kelas</option>
+          ${["9A","9B","9C","9D","9E","9F","9G","9H","9I","9J"].map(k=>`<option value="${k}" ${state.id.kelas===k?'selected':''}>${k}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>Jenis kelamin</label>
+        <select id="f-jk">
+          <option value="">Pilih</option>
+          <option value="Laki-laki" ${state.id.jk==="Laki-laki"?'selected':''}>Laki-laki</option>
+          <option value="Perempuan" ${state.id.jk==="Perempuan"?'selected':''}>Perempuan</option>
+        </select>
+      </div>
+      <div class="field"><label>Tanggal pelaksanaan</label><input id="f-tglpel" type="date" value="${state.id.tglPelaksanaan}"></div>
+      <div class="field"><label>Tanggal lahir</label><input id="f-tgllahir" type="date" value="${state.id.tglLahir}"></div>
+      <div class="field">
+        <label>Usia (otomatis)</label>
+        <input class="readonly" id="f-usia" value="${usia(state.id.tglLahir, state.id.tglPelaksanaan)}" readonly placeholder="Terisi otomatis">
+      </div>
+    </div>
+    <div id="id-error" class="error"></div>
+    <div class="actions">
+      <span></span>
+      <button class="btn primary" id="next1">Lanjut: eksplorasi cita-cita →</button>
+    </div>
+  `;
+  ["nama","panggilan","absen","kelas","jk","tglpel","tgllahir"].forEach(k=>{
+    const map = {tglpel:"tglPelaksanaan", tgllahir:"tglLahir"};
+    const key = map[k] || k;
+    const node = c.querySelector("#f-"+k);
+    node.addEventListener("input", ()=>{
+      state.id[key] = node.value;
+      if(key==="tglLahir" || key==="tglPelaksanaan"){
+        c.querySelector("#f-usia").value = usia(state.id.tglLahir, state.id.tglPelaksanaan);
+      }
+    });
+    node.addEventListener("change", ()=>{ state.id[key] = node.value; });
+  });
+  c.querySelector("#next1").addEventListener("click", ()=>{
+    const required = ["nama","absen","kelas","jk","tglLahir"];
+    const missing = required.filter(k=> !state.id[k] || !String(state.id[k]).trim());
+    if(missing.length){
+      c.querySelector("#id-error").textContent = "Lengkapi dulu semua data identitas sebelum lanjut.";
+      return;
+    }
+    state.step = 1;
+    render();
+  });
+  return c;
+}
+
+function renderEksplorasi(){
+  const c = el(`<div class="card"></div>`);
+  const modeSudah = state.mode === "sudah";
+  const modeBingung = state.mode === "bingung";
+  c.innerHTML = `
+    <h2>Eksplorasi cita-cita</h2>
+    <p class="sub">Pilih salah satu jalan untuk mulai melukis arah masa depanmu.</p>
+    <div class="choice-tabs">
+      <button id="tab-sudah" class="${modeSudah?'active':''}">Saya sudah punya cita-cita</button>
+      <button id="tab-bingung" class="${modeBingung?'active':''}">Saya belum tahu, tapi saya suka...</button>
+    </div>
+    <div id="pick-area"></div>
+    <div class="actions">
+      <button class="btn ghost" id="back0">← Kembali</button>
+      <button class="btn primary" id="next2" ${state.pilihan?'':'disabled'}>Lihat hasil →</button>
+    </div>
+  `;
+  const pickArea = c.querySelector("#pick-area");
+  function drawPicker(){
+    const list = state.mode === "sudah" ? CITACITA_DB : BIDANG_DB;
+    const label = state.mode === "sudah" ? "Pilih cita-citamu, atau ketik sendiri jika tidak ada di daftar" : "Pilih bidang yang membuatmu paling semangat";
+    pickArea.innerHTML = `
+      <div class="field"><label>${label}</label>
+        <input id="search-box" placeholder="Ketik untuk mencari, atau tulis cita-citamu sendiri...">
+      </div>
+      <div class="pick-grid" id="pick-grid"></div>
+    `;
+    const grid = pickArea.querySelector("#pick-grid");
+    function drawGrid(filter){
+      const f = (filter||"").toLowerCase();
+      const items = list.filter(it => it.n.toLowerCase().includes(f));
+      grid.innerHTML = items.map((it,i)=>{
+        const idx = list.indexOf(it);
+        const selected = state.pilihan && state.pilihan.custom!==true && state.pilihan.n === it.n;
+        return `<button class="pick-card ${selected?'selected':''}" data-idx="${idx}">${it.n.split(' — ')[0].split(' (')[0]}<span class="kat">${it.k}</span></button>`;
+      }).join("");
+      grid.querySelectorAll(".pick-card").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const item = list[parseInt(btn.dataset.idx)];
+          state.pilihan = Object.assign({}, item, {custom:false, sumber: state.mode});
+          render();
+        });
+      });
+    }
+    drawGrid("");
+    pickArea.querySelector("#search-box").addEventListener("input", (e)=>{
+      drawGrid(e.target.value);
+    });
+    pickArea.querySelector("#search-box").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" && e.target.value.trim()){
+        state.pilihan = { n: e.target.value.trim(), k:"Eksplorasi mandiri", sma:"Perlu didiskusikan bersama guru BK", smk:"Perlu didiskusikan bersama guru BK", ked:"Perlu didiskusikan bersama guru BK", pon:"Perlu didiskusikan bersama guru BK", kul:"Perlu didiskusikan bersama guru BK", custom:true, sumber: state.mode };
+        render();
+      }
+    });
+  }
+  if(state.mode) drawPicker();
+  c.querySelector("#tab-sudah").addEventListener("click", ()=>{ state.mode = "sudah"; state.pilihan=null; render(); });
+  c.querySelector("#tab-bingung").addEventListener("click", ()=>{ state.mode = "bingung"; state.pilihan=null; render(); });
+  c.querySelector("#back0").addEventListener("click", ()=>{ state.step = 0; render(); });
+  c.querySelector("#next2").addEventListener("click", ()=>{ if(state.pilihan){ state.step = 2; render(); saveResult(); } });
+  return c;
+}
+
+function renderHasil(){
+  const c = el(`<div class="card"></div>`);
+  const p = state.pilihan;
+  c.innerHTML = `
+    <h2>Peta masa depanmu</h2>
+    <p class="sub">Ini gambaran arah yang sesuai dengan pilihanmu. Diskusikan hasil ini dengan guru BK dan orang tua, ya.</p>
+    <div class="idrecap">
+      <b>${state.id.nama}</b> (${state.id.panggilan || '-'}) &middot; Kelas ${state.id.kelas} &middot; No. absen ${state.id.absen} &middot; ${state.id.jk}<br>
+      Usia: ${usia(state.id.tglLahir, state.id.tglPelaksanaan) || '-'} &middot; Tanggal pelaksanaan: ${state.id.tglPelaksanaan}
+    </div>
+    <div class="result-block">
+      <div class="result-row"><div class="lbl">${state.mode==='sudah' ? 'Cita-cita' : 'Bidang minat'}</div><div class="val">${p.n}</div></div>
+      <div class="result-row"><div class="lbl">Kategori</div><div class="val">${p.k}</div></div>
+      <div class="result-row"><div class="lbl">Peminatan SMA</div><div class="val">${p.sma}</div></div>
+      <div class="result-row"><div class="lbl">Bidang keahlian SMK</div><div class="val">${p.smk}</div></div>
+      <div class="result-row"><div class="lbl">Sekolah kedinasan</div><div class="val">${p.ked}</div></div>
+      <div class="result-row"><div class="lbl">Pondok pesantren</div><div class="val">${p.pon}</div></div>
+      <div class="result-row"><div class="lbl">Jurusan kuliah</div><div class="val">${p.kul}</div></div>
+    </div>
+    <div class="actions no-print">
+      <button class="btn ghost" id="back1">← Pilih ulang</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn ghost" id="btn-print">Cetak / simpan PDF</button>
+        <button class="btn primary" id="btn-restart">Selesai, isi siswa baru</button>
+      </div>
+    </div>
+    <p class="hint no-print">Hasil ini sudah otomatis tersimpan di perangkat ini dan direkap untuk guru BK.</p>
+  `;
+  c.querySelector("#back1").addEventListener("click", ()=>{ state.step = 1; render(); });
+  c.querySelector("#btn-print").addEventListener("click", ()=> window.print());
+  c.querySelector("#btn-restart").addEventListener("click", ()=>{
+    state = { step:0, id:{ nama:"", panggilan:"", absen:"", kelas:"", jk:"", tglPelaksanaan: new Date().toISOString().slice(0,10), tglLahir:"" }, mode:null, pilihan:null, savedKey:null, view:"app" };
+    render();
+  });
+  return c;
+}
+
+async function saveResult(){
+  const record = { id: state.id, mode: state.mode, pilihan: state.pilihan, waktu: new Date().toISOString() };
+  try{
+    const key = "hasil:" + Date.now() + "-" + Math.random().toString(36).slice(2,7);
+    const payload = JSON.stringify(record);
+    await window.storage.set(key, payload, false);
+    await window.storage.set(key, payload, true);
+    state.savedKey = key;
+    toast("Hasil tersimpan");
+  }catch(e){
+    console.error("Gagal menyimpan ke penyimpanan lokal", e);
+    toast("Gagal menyimpan hasil di perangkat, coba lagi");
+  }
+  sendToSheet(record);
+}
+
+function sendToSheet(record){
+  if(!SHEET_WEBHOOK_URL || !SHEET_WEBHOOK_URL.startsWith("http")) return;
+  try{
+    fetch(SHEET_WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(record)
+    }).catch(err=> console.error("Gagal mengirim ke Google Sheets", err));
+  }catch(e){
+    console.error("Gagal mengirim ke Google Sheets", e);
+  }
+}
+
+function renderFooter(){
+  const f = document.createElement('footer');
+  f.className = "note no-print";
+  f.innerHTML = `Platform Bimbingan Konseling`;
+  return f;
+}
+
+function renderRekap(){
+  const c = el(`<div class="card no-print"></div>`);
+  const tab = state.rekapTab || "daftar";
+  c.innerHTML = `
+    <h2>Rekap hasil siswa (guru BK)</h2>
+    <p class="sub">Daftar dan analisis seluruh hasil siswa yang sudah mengisi platform.</p>
+    <div class="choice-tabs">
+      <button id="rtab-daftar" class="${tab==='daftar'?'active':''}">Daftar hasil</button>
+      <button id="rtab-analisis" class="${tab==='analisis'?'active':''}">Analisis</button>
+    </div>
+    <div id="rekap-status">Memuat data...</div>
+    <div class="actions">
+      <button class="btn ghost" id="close-rekap" style="${isBkMode()?'display:none;':''}">← Kembali ke platform</button>
+      <button class="btn primary" id="dl-csv" style="${tab==='analisis'?'display:none;':''}">Unduh sebagai CSV</button>
+    </div>
+  `;
+  c.querySelector("#close-rekap").addEventListener("click", ()=>{ state.view = "app"; render(); });
+  c.querySelector("#rtab-daftar").addEventListener("click", ()=>{ state.rekapTab = "daftar"; render(); });
+  c.querySelector("#rtab-analisis").addEventListener("click", ()=>{ state.rekapTab = "analisis"; render(); });
+  if(tab === "analisis") loadAnalisis(c); else loadRekap(c);
+  return c;
+}
+
+async function fetchAllRows(){
+  const list = await window.storage.list("hasil:", true);
+  const keys = (list && list.keys) || [];
+  const rows = [];
+  for(const k of keys){
+    try{
+      const r = await window.storage.get(k, true);
+      if(r && r.value) rows.push(JSON.parse(r.value));
+    }catch(e){}
+  }
+  rows.sort((a,b)=> new Date(a.waktu) - new Date(b.waktu));
+  return rows;
+}
+
+async function loadRekap(c){
+  const status = c.querySelector("#rekap-status");
+  try{
+    const rows = await fetchAllRows();
+    if(!rows.length){
+      status.innerHTML = "<p>Belum ada data siswa yang tersimpan.</p>";
+      c.querySelector("#dl-csv").disabled = true;
+      return;
+    }
+    status.innerHTML = `
+      <table class="rekap">
+        <thead><tr><th>Nama</th><th>Kelas</th><th>Absen</th><th>JK</th><th>Usia</th><th>${'Cita-cita / minat'}</th><th>SMA</th><th>SMK</th><th>Kedinasan</th><th>Pondok</th><th>Kuliah</th></tr></thead>
+        <tbody>
+          ${rows.map(r=>`<tr>
+            <td>${r.id.nama}</td><td>${r.id.kelas}</td><td>${r.id.absen}</td><td>${r.id.jk}</td>
+            <td>${usia(r.id.tglLahir, r.id.tglPelaksanaan)}</td>
+            <td>${r.pilihan.n}</td><td>${r.pilihan.sma}</td><td>${r.pilihan.smk}</td><td>${r.pilihan.ked}</td><td>${r.pilihan.pon}</td><td>${r.pilihan.kul}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      <p class="hint">Total: ${rows.length} pengisian</p>
+    `;
+    c.querySelector("#dl-csv").addEventListener("click", ()=> downloadCSV(rows));
+  }catch(e){
+    console.error(e);
+    status.innerHTML = "<p>Gagal memuat data rekap. Coba muat ulang halaman.</p>";
+  }
+}
+
+const KELAS_LIST = ["9A","9B","9C","9D","9E","9F","9G","9H","9I","9J"];
+
+async function loadAnalisis(c){
+  const status = c.querySelector("#rekap-status");
+  try{
+    const rows = await fetchAllRows();
+    if(!rows.length){
+      status.innerHTML = "<p>Belum ada data siswa yang tersimpan.</p>";
+      return;
+    }
+
+    let totalSiswa = {};
+    try{
+      const r = await window.storage.get("config:totalSiswa", true);
+      if(r && r.value) totalSiswa = JSON.parse(r.value);
+    }catch(e){}
+
+    const byStudent = {};
+    rows.forEach(r=>{
+      const key = (r.id.nama||"").trim().toLowerCase() + "|" + (r.id.kelas||"").trim() + "|" + (r.id.absen||"").trim();
+      if(!byStudent[key]) byStudent[key] = { nama:r.id.nama, kelas:r.id.kelas, absen:r.id.absen, entries: [] };
+      byStudent[key].entries.push(r);
+    });
+
+    const perKelas = {};
+    KELAS_LIST.forEach(k=> perKelas[k] = { siswaUnik: new Set(), kategori: {} });
+    Object.values(byStudent).forEach(s=>{
+      const k = s.kelas;
+      if(!perKelas[k]) perKelas[k] = { siswaUnik: new Set(), kategori: {} };
+      perKelas[k].siswaUnik.add(s.nama.trim().toLowerCase()+"|"+s.absen);
+      const last = s.entries[s.entries.length-1];
+      const kat = last.pilihan.k;
+      perKelas[k].kategori[kat] = (perKelas[k].kategori[kat] || 0) + 1;
+    });
+
+    const bingung = Object.values(byStudent).filter(s=>{
+      const distinct = new Set(s.entries.map(e=> e.pilihan.n.trim().toLowerCase()));
+      return distinct.size > 1;
+    });
+
+    const kelasRows = KELAS_LIST.map(k=>{
+      const data = perKelas[k] || { siswaUnik:new Set(), kategori:{} };
+      const isi = data.siswaUnik.size;
+      const total = totalSiswa[k] ? parseInt(totalSiswa[k]) : null;
+      const pct = total ? Math.round((isi/total)*100) : null;
+      const katEntries = Object.entries(data.kategori).sort((a,b)=> b[1]-a[1]);
+      const totalKat = katEntries.reduce((s,e)=> s+e[1], 0);
+      const katStr = katEntries.length ? katEntries.map(([nm,jml])=> nm + " " + Math.round((jml/totalKat)*100) + "%").join(", ") : "-";
+      return `<tr>
+        <td>${k}</td>
+        <td>${isi}</td>
+        <td><input type="number" min="0" data-kelas="${k}" class="tot-input" value="${total!==null?total:''}" style="width:64px;padding:4px 6px;"></td>
+        <td>${pct!==null?pct+'%':'-'}</td>
+        <td style="font-size:12px;">${katStr}</td>
+      </tr>`;
+    }).join("");
+
+    status.innerHTML = `
+      <h3 style="font-family:'Fraunces',serif;font-size:17px;margin:18px 0 8px;">Persentase pengisian & distribusi kategori per kelas</h3>
+      <p class="hint">Isi kolom "total siswa" tiap kelas untuk melihat persentase pengisian, lalu klik simpan.</p>
+      <table class="rekap">
+        <thead><tr><th>Kelas</th><th>Sudah mengisi (siswa unik)</th><th>Total siswa</th><th>% mengisi</th><th>Distribusi kategori cita-cita/minat</th></tr></thead>
+        <tbody>${kelasRows}</tbody>
+      </table>
+      <div style="margin:10px 0 28px;"><button class="btn ghost" id="save-total">Simpan total siswa per kelas</button></div>
+
+      <h3 style="font-family:'Fraunces',serif;font-size:17px;margin:18px 0 8px;">Siswa dengan lebih dari satu cita-cita berbeda</h3>
+      <p class="hint">Siswa di bawah ini mengisi platform lebih dari sekali dengan cita-cita/minat yang berbeda-beda — kemungkinan masih bingung dan perlu pendampingan lanjutan.</p>
+      ${bingung.length ? `
+      <table class="rekap">
+        <thead><tr><th>Nama</th><th>Kelas</th><th>Absen</th><th>Jumlah pengisian</th><th>Cita-cita/minat yang pernah diisi</th></tr></thead>
+        <tbody>
+          ${bingung.map(s=>`<tr>
+            <td>${s.nama}</td><td>${s.kelas}</td><td>${s.absen}</td><td>${s.entries.length}</td>
+            <td>${s.entries.map(e=> e.pilihan.n + " <span class='hint' style='display:inline'>(" + new Date(e.waktu).toLocaleDateString('id-ID') + ")</span>").join("; ")}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      <p class="hint">Total: ${bingung.length} siswa terindikasi belum yakin dengan cita-citanya.</p>
+      ` : `<p class="hint">Belum ada siswa yang mengisi lebih dari satu cita-cita berbeda.</p>`}
+    `;
+
+    const saveBtn = status.querySelector("#save-total");
+    if(saveBtn) saveBtn.addEventListener("click", async ()=>{
+      const inputs = status.querySelectorAll(".tot-input");
+      const cfg = {};
+      inputs.forEach(inp=>{ if(inp.value) cfg[inp.dataset.kelas] = inp.value; });
+      try{
+        await window.storage.set("config:totalSiswa", JSON.stringify(cfg), true);
+        toast("Total siswa per kelas tersimpan");
+        loadAnalisis(c);
+      }catch(e){
+        console.error(e);
+        toast("Gagal menyimpan total siswa");
+      }
+    });
+  }catch(e){
+    console.error(e);
+    status.innerHTML = "<p>Gagal memuat data analisis. Coba muat ulang halaman.</p>";
+  }
+}
+
+function downloadCSV(rows){
+  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
+  const lines = [headers.join(",")];
+  rows.forEach(r=>{
+    const vals = [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul];
+    lines.push(vals.map(v=> '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
+  });
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "rekap-melukis-masa-depan.csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+render();
+</script>
+</body>
+</html>
