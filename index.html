@@ -210,6 +210,8 @@ let state = {
   mode: null,
   pilihan: null,
   jenjang: null,
+  sekolahUtama: "",
+  sekolahKedua: "",
   savedKey: null,
   view: "app"
 };
@@ -349,6 +351,14 @@ function renderEksplorasi(){
         ${JENJANG_LIST.map(j=>`<option value="${j}" ${state.jenjang===j?'selected':''}>${j}</option>`).join("")}
       </select>
     </div>
+    <div class="field">
+      <label>Sebutkan jenjang pendidikan lanjutan yang utama kamu inginkan</label>
+      <input id="f-sekolah-utama" value="${state.sekolahUtama}" placeholder="Contoh: SMA Al Hikmah Surabaya">
+    </div>
+    <div class="field">
+      <label>Sebutkan jenjang pendidikan lanjutan pilihan kedua yang kamu inginkan</label>
+      <input id="f-sekolah-kedua" value="${state.sekolahKedua}" placeholder="Contoh: SMA Boarding School Al Hikmah Batu">
+    </div>
     <div class="choice-tabs">
       <button id="tab-sudah" class="${modeSudah?'active':''}">Saya sudah punya cita-cita</button>
       <button id="tab-bingung" class="${modeBingung?'active':''}">Saya belum tahu, tapi saya suka...</button>
@@ -361,6 +371,8 @@ function renderEksplorasi(){
     </div>
   `;
   c.querySelector("#f-jenjang").addEventListener("change", (e)=>{ state.jenjang = e.target.value; });
+  c.querySelector("#f-sekolah-utama").addEventListener("input", (e)=>{ state.sekolahUtama = e.target.value; });
+  c.querySelector("#f-sekolah-kedua").addEventListener("input", (e)=>{ state.sekolahKedua = e.target.value; });
   const pickArea = c.querySelector("#pick-area");
   function drawPicker(){
     const list = state.mode === "sudah" ? CITACITA_DB : BIDANG_DB;
@@ -408,6 +420,10 @@ function renderEksplorasi(){
       c.querySelector("#eksplor-error").textContent = "Pilih dulu jenjang pendidikan lanjutan yang kamu tuju.";
       return;
     }
+    if(!state.sekolahUtama || !state.sekolahUtama.trim()){
+      c.querySelector("#eksplor-error").textContent = "Sebutkan dulu sekolah pilihan utamamu.";
+      return;
+    }
     if(!state.pilihan){
       c.querySelector("#eksplor-error").textContent = "Pilih dulu cita-cita atau bidang minatmu.";
       return;
@@ -429,6 +445,8 @@ function renderHasil(){
     </div>
     <div class="result-block">
       <div class="result-row"><div class="lbl">Jenjang lanjutan yang dituju</div><div class="val">${state.jenjang}</div></div>
+      <div class="result-row"><div class="lbl">Sekolah pilihan utama</div><div class="val">${state.sekolahUtama || '-'}</div></div>
+      <div class="result-row"><div class="lbl">Sekolah pilihan kedua</div><div class="val">${state.sekolahKedua || '-'}</div></div>
       <div class="result-row"><div class="lbl">${state.mode==='sudah' ? 'Cita-cita' : 'Bidang minat'}</div><div class="val">${p.n}</div></div>
       <div class="result-row"><div class="lbl">Kategori</div><div class="val">${p.k}</div></div>
       <div class="result-row"><div class="lbl">Peminatan SMA</div><div class="val">${p.sma}</div></div>
@@ -449,7 +467,7 @@ function renderHasil(){
   c.querySelector("#back1").addEventListener("click", ()=>{ state.step = 1; render(); });
   c.querySelector("#btn-print").addEventListener("click", ()=> window.print());
   c.querySelector("#btn-restart").addEventListener("click", ()=>{
-    state = { step:0, id:{ nama:"", panggilan:"", absen:"", kelas:"", jk:"", tglPelaksanaan: new Date().toISOString().slice(0,10), tglLahir:"" }, mode:null, pilihan:null, jenjang:null, savedKey:null, view:"app" };
+    state = { step:0, id:{ nama:"", panggilan:"", absen:"", kelas:"", jk:"", tglPelaksanaan: new Date().toISOString().slice(0,10), tglLahir:"" }, mode:null, pilihan:null, jenjang:null, sekolahUtama:"", sekolahKedua:"", savedKey:null, view:"app" };
     render();
   });
   return c;
@@ -457,7 +475,7 @@ function renderHasil(){
 
 async function saveResult(){
   const submissionId = "S" + Date.now() + "-" + Math.random().toString(36).slice(2,7);
-  const record = { submissionId, id: state.id, mode: state.mode, jenjang: state.jenjang, pilihan: state.pilihan, waktu: new Date().toISOString() };
+  const record = { submissionId, id: state.id, mode: state.mode, jenjang: state.jenjang, sekolahUtama: state.sekolahUtama, sekolahKedua: state.sekolahKedua, pilihan: state.pilihan, waktu: new Date().toISOString() };
   try{
     const histori = JSON.parse(localStorage.getItem("melukis_riwayat") || "[]");
     histori.push(record);
@@ -555,6 +573,8 @@ function mapSheetRow(o){
     id: { nama:o["Nama"], panggilan:o["Panggilan"], kelas:o["Kelas"], absen:String(o["Absen"]), jk:o["Jenis Kelamin"], tglLahir:o["Tanggal Lahir"], tglPelaksanaan:o["Tanggal Pelaksanaan"] },
     mode: o["Mode"],
     jenjang: o["Jenjang Lanjutan"],
+    sekolahUtama: o["Sekolah Pilihan Utama"],
+    sekolahKedua: o["Sekolah Pilihan Kedua"],
     pilihan: { n:o["Cita-cita / Minat"], k:o["Kategori"], sma:o["SMA"], smk:o["SMK"], ked:o["Kedinasan"], pon:o["Pondok"], kul:o["Kuliah"] }
   };
 }
@@ -579,13 +599,15 @@ async function loadRekap(c){
     }
     status.innerHTML = `
       <table class="rekap">
-        <thead><tr><th class="no-print">Hapus</th><th>Nama</th><th>Kelas</th><th>Absen</th><th>JK</th><th>Usia</th><th>Jenjang lanjutan</th><th>${'Cita-cita / minat'}</th><th>SMA</th><th>SMK</th><th>Kedinasan</th><th>Pondok</th><th>Kuliah</th></tr></thead>
+        <thead><tr><th class="no-print">Hapus</th><th>Nama</th><th>Kelas</th><th>Absen</th><th>JK</th><th>Usia</th><th>Jenjang lanjutan</th><th>Sekolah pilihan utama</th><th>Sekolah pilihan kedua</th><th>${'Cita-cita / minat'}</th><th>SMA</th><th>SMK</th><th>Kedinasan</th><th>Pondok</th><th>Kuliah</th></tr></thead>
         <tbody>
           ${rows.map(r=>`<tr data-sid="${r.submissionId}">
             <td class="no-print"><button class="linklike btn-del-row" style="color:var(--error);" data-sid="${r.submissionId}" data-nama="${r.id.nama}">Hapus</button></td>
             <td>${r.id.nama}</td><td>${r.id.kelas}</td><td>${r.id.absen}</td><td>${r.id.jk}</td>
             <td>${usia(r.id.tglLahir, r.id.tglPelaksanaan)}</td>
             <td>${r.jenjang||'-'}</td>
+            <td>${r.sekolahUtama||'-'}</td>
+            <td>${r.sekolahKedua||'-'}</td>
             <td>${r.pilihan.n}</td><td>${r.pilihan.sma}</td><td>${r.pilihan.smk}</td><td>${r.pilihan.ked}</td><td>${r.pilihan.pon}</td><td>${r.pilihan.kul}</td>
           </tr>`).join("")}
         </tbody>
@@ -727,8 +749,8 @@ async function loadAnalisis(c){
 }
 
 function downloadXLSX(rows){
-  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Jenjang Lanjutan","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
-  const data = rows.map(r=> [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.jenjang||"", r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul]);
+  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Jenjang Lanjutan","Sekolah Pilihan Utama","Sekolah Pilihan Kedua","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
+  const data = rows.map(r=> [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.jenjang||"", r.sekolahUtama||"", r.sekolahKedua||"", r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul]);
   if(typeof XLSX === "undefined"){ toast("Gagal memuat modul Excel, coba muat ulang halaman."); return; }
   const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
   const wb = XLSX.utils.book_new();
@@ -737,10 +759,10 @@ function downloadXLSX(rows){
 }
 
 function downloadCSV(rows){
-  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Jenjang Lanjutan","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
+  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Jenjang Lanjutan","Sekolah Pilihan Utama","Sekolah Pilihan Kedua","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
   const lines = [headers.join(",")];
   rows.forEach(r=>{
-    const vals = [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.jenjang||"", r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul];
+    const vals = [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.jenjang||"", r.sekolahUtama||"", r.sekolahKedua||"", r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul];
     lines.push(vals.map(v=> '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
   });
   const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8;"});
