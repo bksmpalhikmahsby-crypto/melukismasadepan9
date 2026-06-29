@@ -568,14 +568,30 @@ async function sendAction(payload){
 
 function mapSheetRow(o){
   return {
-    submissionId: o["ID"],
-    waktu: o["Waktu"],
-    id: { nama:o["Nama"], panggilan:o["Panggilan"], kelas:o["Kelas"], absen:String(o["Absen"]), jk:o["Jenis Kelamin"], tglLahir:o["Tanggal Lahir"], tglPelaksanaan:o["Tanggal Pelaksanaan"] },
-    mode: o["Mode"],
-    jenjang: o["Jenjang Lanjutan"],
-    sekolahUtama: o["Sekolah Pilihan Utama"],
-    sekolahKedua: o["Sekolah Pilihan Kedua"],
-    pilihan: { n:o["Cita-cita / Minat"], k:o["Kategori"], sma:o["SMA"], smk:o["SMK"], ked:o["Kedinasan"], pon:o["Pondok"], kul:o["Kuliah"] }
+    submissionId: o["ID"] || o["Waktu"] || "",
+    waktu: o["Waktu"] || "",
+    id: {
+      nama: o["Nama"] || "",
+      panggilan: o["Panggilan"] || "",
+      kelas: o["Kelas"] || "",
+      absen: String(o["Absen"] || ""),
+      jk: o["Jenis Kelamin"] || "",
+      tglLahir: o["Tanggal Lahir"] || "",
+      tglPelaksanaan: o["Tanggal Pelaksanaan"] || ""
+    },
+    mode: o["Mode"] || "",
+    jenjang: o["Jenjang Lanjutan"] || "",
+    sekolahUtama: o["Sekolah Pilihan Utama"] || "",
+    sekolahKedua: o["Sekolah Pilihan Kedua"] || "",
+    pilihan: {
+      n: o["Cita-cita / Minat"] || "",
+      k: o["Kategori"] || "",
+      sma: o["SMA"] || "",
+      smk: o["SMK"] || "",
+      ked: o["Kedinasan"] || "",
+      pon: o["Pondok"] || "",
+      kul: o["Kuliah"] || ""
+    }
   };
 }
 
