@@ -6,6 +6,7 @@
 <title>Melukis Masa Depan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --canvas:#F6F1E7;
@@ -432,19 +433,18 @@ function renderHasil(){
 }
 
 async function saveResult(){
-  const record = { id: state.id, mode: state.mode, pilihan: state.pilihan, waktu: new Date().toISOString() };
+  const submissionId = "S" + Date.now() + "-" + Math.random().toString(36).slice(2,7);
+  const record = { submissionId, id: state.id, mode: state.mode, pilihan: state.pilihan, waktu: new Date().toISOString() };
   try{
-    const key = "hasil:" + Date.now() + "-" + Math.random().toString(36).slice(2,7);
-    const payload = JSON.stringify(record);
-    await window.storage.set(key, payload, false);
-    await window.storage.set(key, payload, true);
-    state.savedKey = key;
-    toast("Hasil tersimpan");
+    const histori = JSON.parse(localStorage.getItem("melukis_riwayat") || "[]");
+    histori.push(record);
+    localStorage.setItem("melukis_riwayat", JSON.stringify(histori));
+    state.savedKey = submissionId;
   }catch(e){
-    console.error("Gagal menyimpan ke penyimpanan lokal", e);
-    toast("Gagal menyimpan hasil di perangkat, coba lagi");
+    console.error("Gagal menyimpan ke penyimpanan perangkat", e);
   }
   sendToSheet(record);
+  toast("Hasil tersimpan");
 }
 
 function sendToSheet(record){
@@ -469,38 +469,77 @@ function renderFooter(){
 }
 
 function renderRekap(){
-  const c = el(`<div class="card no-print"></div>`);
+  const c = el(`<div class="card"></div>`);
   const tab = state.rekapTab || "daftar";
   c.innerHTML = `
     <h2>Rekap hasil siswa (guru BK)</h2>
-    <p class="sub">Daftar dan analisis seluruh hasil siswa yang sudah mengisi platform.</p>
-    <div class="choice-tabs">
+    <p class="sub">Daftar dan analisis seluruh hasil siswa, diambil langsung dari Google Sheets.</p>
+    <div class="choice-tabs no-print">
       <button id="rtab-daftar" class="${tab==='daftar'?'active':''}">Daftar hasil</button>
       <button id="rtab-analisis" class="${tab==='analisis'?'active':''}">Analisis</button>
     </div>
-    <div id="rekap-status">Memuat data...</div>
-    <div class="actions">
-      <button class="btn ghost" id="close-rekap" style="${isBkMode()?'display:none;':''}">← Kembali ke platform</button>
-      <button class="btn primary" id="dl-csv" style="${tab==='analisis'?'display:none;':''}">Unduh sebagai CSV</button>
+    <div id="rekap-status">Memuat data dari Google Sheets...</div>
+    <div class="actions no-print">
+      <div style="display:flex;gap:10px;">
+        <button class="btn ghost" id="close-rekap" style="${isBkMode()?'display:none;':''}">← Kembali ke platform</button>
+        <button class="btn ghost" id="btn-refresh">Muat ulang data</button>
+      </div>
+      <div style="display:flex;gap:10px;${tab==='analisis'?'display:none;':''}" id="rekap-export">
+        <button class="btn ghost" id="btn-print-rekap">Cetak PDF</button>
+        <button class="btn ghost" id="dl-csv">Unduh CSV</button>
+        <button class="btn ghost" id="dl-xlsx">Unduh Excel</button>
+        <button class="btn ghost" id="btn-hapus-semua" style="color:var(--error);border-color:var(--error);">Hapus semua data</button>
+      </div>
     </div>
   `;
-  c.querySelector("#close-rekap").addEventListener("click", ()=>{ state.view = "app"; render(); });
+  const closeBtn = c.querySelector("#close-rekap");
+  if(closeBtn) closeBtn.addEventListener("click", ()=>{ state.view = "app"; render(); });
+  c.querySelector("#btn-refresh").addEventListener("click", ()=> render());
   c.querySelector("#rtab-daftar").addEventListener("click", ()=>{ state.rekapTab = "daftar"; render(); });
   c.querySelector("#rtab-analisis").addEventListener("click", ()=>{ state.rekapTab = "analisis"; render(); });
-  if(tab === "analisis") loadAnalisis(c); else loadRekap(c);
+  c.querySelector("#btn-print-rekap").addEventListener("click", ()=> window.print());
+  c.querySelector("#btn-hapus-semua").addEventListener("click", async ()=>{
+    if(!window.confirm("Yakin ingin menghapus SEMUA data hasil siswa di Google Sheets? Tindakan ini tidak dapat dibatalkan.")) return;
+    await sendAction({ action: "deleteAll" });
+    toast("Menghapus semua data...");
+    setTimeout(()=> render(), 1200);
+  });
+  if(tab === "analisis"){
+    c.querySelector("#rekap-export").style.display = "none";
+    loadAnalisis(c);
+  } else {
+    loadRekap(c);
+  }
   return c;
 }
 
+async function sendAction(payload){
+  if(!SHEET_WEBHOOK_URL || !SHEET_WEBHOOK_URL.startsWith("http")) return;
+  try{
+    await fetch(SHEET_WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){ console.error("Gagal mengirim aksi ke Google Sheets", e); }
+}
+
+function mapSheetRow(o){
+  return {
+    submissionId: o["ID"],
+    waktu: o["Waktu"],
+    id: { nama:o["Nama"], panggilan:o["Panggilan"], kelas:o["Kelas"], absen:String(o["Absen"]), jk:o["Jenis Kelamin"], tglLahir:o["Tanggal Lahir"], tglPelaksanaan:o["Tanggal Pelaksanaan"] },
+    mode: o["Mode"],
+    pilihan: { n:o["Cita-cita / Minat"], k:o["Kategori"], sma:o["SMA"], smk:o["SMK"], ked:o["Kedinasan"], pon:o["Pondok"], kul:o["Kuliah"] }
+  };
+}
+
 async function fetchAllRows(){
-  const list = await window.storage.list("hasil:", true);
-  const keys = (list && list.keys) || [];
-  const rows = [];
-  for(const k of keys){
-    try{
-      const r = await window.storage.get(k, true);
-      if(r && r.value) rows.push(JSON.parse(r.value));
-    }catch(e){}
-  }
+  if(!SHEET_WEBHOOK_URL || !SHEET_WEBHOOK_URL.startsWith("http")) return [];
+  const res = await fetch(SHEET_WEBHOOK_URL + "?action=list");
+  const data = await res.json();
+  const rows = (Array.isArray(data) ? data : []).map(mapSheetRow).filter(r=> r.id.nama);
   rows.sort((a,b)=> new Date(a.waktu) - new Date(b.waktu));
   return rows;
 }
@@ -510,15 +549,16 @@ async function loadRekap(c){
   try{
     const rows = await fetchAllRows();
     if(!rows.length){
-      status.innerHTML = "<p>Belum ada data siswa yang tersimpan.</p>";
-      c.querySelector("#dl-csv").disabled = true;
+      status.innerHTML = "<p>Belum ada data siswa yang tersimpan di Google Sheets.</p>";
+      ["dl-csv","dl-xlsx","btn-print-rekap","btn-hapus-semua"].forEach(id=>{ const b=c.querySelector("#"+id); if(b) b.disabled = true; });
       return;
     }
     status.innerHTML = `
       <table class="rekap">
-        <thead><tr><th>Nama</th><th>Kelas</th><th>Absen</th><th>JK</th><th>Usia</th><th>${'Cita-cita / minat'}</th><th>SMA</th><th>SMK</th><th>Kedinasan</th><th>Pondok</th><th>Kuliah</th></tr></thead>
+        <thead><tr><th class="no-print">Hapus</th><th>Nama</th><th>Kelas</th><th>Absen</th><th>JK</th><th>Usia</th><th>${'Cita-cita / minat'}</th><th>SMA</th><th>SMK</th><th>Kedinasan</th><th>Pondok</th><th>Kuliah</th></tr></thead>
         <tbody>
-          ${rows.map(r=>`<tr>
+          ${rows.map(r=>`<tr data-sid="${r.submissionId}">
+            <td class="no-print"><button class="linklike btn-del-row" style="color:var(--error);" data-sid="${r.submissionId}" data-nama="${r.id.nama}">Hapus</button></td>
             <td>${r.id.nama}</td><td>${r.id.kelas}</td><td>${r.id.absen}</td><td>${r.id.jk}</td>
             <td>${usia(r.id.tglLahir, r.id.tglPelaksanaan)}</td>
             <td>${r.pilihan.n}</td><td>${r.pilihan.sma}</td><td>${r.pilihan.smk}</td><td>${r.pilihan.ked}</td><td>${r.pilihan.pon}</td><td>${r.pilihan.kul}</td>
@@ -527,10 +567,19 @@ async function loadRekap(c){
       </table>
       <p class="hint">Total: ${rows.length} pengisian</p>
     `;
+    status.querySelectorAll(".btn-del-row").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        if(!window.confirm("Hapus hasil milik " + btn.dataset.nama + "?")) return;
+        await sendAction({ action:"delete", submissionId: btn.dataset.sid });
+        toast("Menghapus data...");
+        setTimeout(()=> render(), 1200);
+      });
+    });
     c.querySelector("#dl-csv").addEventListener("click", ()=> downloadCSV(rows));
+    c.querySelector("#dl-xlsx").addEventListener("click", ()=> downloadXLSX(rows));
   }catch(e){
     console.error(e);
-    status.innerHTML = "<p>Gagal memuat data rekap. Coba muat ulang halaman.</p>";
+    status.innerHTML = "<p>Gagal memuat data rekap dari Google Sheets. Pastikan URL webhook aktif, lalu coba \"Muat ulang data\".</p>";
   }
 }
 
@@ -547,8 +596,7 @@ async function loadAnalisis(c){
 
     let totalSiswa = {};
     try{
-      const r = await window.storage.get("config:totalSiswa", true);
-      if(r && r.value) totalSiswa = JSON.parse(r.value);
+      totalSiswa = JSON.parse(localStorage.getItem("melukis_totalSiswa") || "{}");
     }catch(e){}
 
     const byStudent = {};
@@ -593,7 +641,7 @@ async function loadAnalisis(c){
 
     status.innerHTML = `
       <h3 style="font-family:'Fraunces',serif;font-size:17px;margin:18px 0 8px;">Persentase pengisian & distribusi kategori per kelas</h3>
-      <p class="hint">Isi kolom "total siswa" tiap kelas untuk melihat persentase pengisian, lalu klik simpan.</p>
+      <p class="hint">Isi kolom "total siswa" tiap kelas untuk melihat persentase pengisian, lalu klik simpan. (Tersimpan di browser ini saja — isi ulang jika membuka dari perangkat/browser lain.)</p>
       <table class="rekap">
         <thead><tr><th>Kelas</th><th>Sudah mengisi (siswa unik)</th><th>Total siswa</th><th>% mengisi</th><th>Distribusi kategori cita-cita/minat</th></tr></thead>
         <tbody>${kelasRows}</tbody>
@@ -617,13 +665,13 @@ async function loadAnalisis(c){
     `;
 
     const saveBtn = status.querySelector("#save-total");
-    if(saveBtn) saveBtn.addEventListener("click", async ()=>{
+    if(saveBtn) saveBtn.addEventListener("click", ()=>{
       const inputs = status.querySelectorAll(".tot-input");
       const cfg = {};
       inputs.forEach(inp=>{ if(inp.value) cfg[inp.dataset.kelas] = inp.value; });
       try{
-        await window.storage.set("config:totalSiswa", JSON.stringify(cfg), true);
-        toast("Total siswa per kelas tersimpan");
+        localStorage.setItem("melukis_totalSiswa", JSON.stringify(cfg));
+        toast("Total siswa per kelas tersimpan di browser ini");
         loadAnalisis(c);
       }catch(e){
         console.error(e);
@@ -634,6 +682,16 @@ async function loadAnalisis(c){
     console.error(e);
     status.innerHTML = "<p>Gagal memuat data analisis. Coba muat ulang halaman.</p>";
   }
+}
+
+function downloadXLSX(rows){
+  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
+  const data = rows.map(r=> [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul]);
+  if(typeof XLSX === "undefined"){ toast("Gagal memuat modul Excel, coba muat ulang halaman."); return; }
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Rekap");
+  XLSX.writeFile(wb, "rekap-melukis-masa-depan.xlsx");
 }
 
 function downloadCSV(rows){
