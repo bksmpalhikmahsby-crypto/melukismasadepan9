@@ -308,14 +308,14 @@ function renderIdentitas(){
     </div>
 
     <h2 style="font-size:18px;margin-top:8px;">Data orang tua</h2>
-    <p class="sub">Jika data tidak ada atau tidak berlaku (misalnya sudah tidak ada/tidak diketahui), tulis "Tidak ada".</p>
+    <p class="sub">Isi data orang tua/wali dengan lengkap dan sebenar-benarnya.</p>
     <div class="grid2">
-      <div class="field"><label>Nama Ayah</label><input id="f-namaayah" value="${state.id.namaAyah}" placeholder="Nama ayah/wali, atau tulis 'Tidak ada'"></div>
-      <div class="field"><label>Pekerjaan Ayah</label><input id="f-pekerjaanayah" value="${state.id.pekerjaanAyah}" placeholder="Contoh: Wiraswasta, atau tulis 'Tidak ada'"></div>
-      <div class="field"><label>Nama Ibu</label><input id="f-namaibu" value="${state.id.namaIbu}" placeholder="Nama ibu/wali, atau tulis 'Tidak ada'"></div>
-      <div class="field"><label>Pekerjaan Ibu</label><input id="f-pekerjaanibu" value="${state.id.pekerjaanIbu}" placeholder="Contoh: Ibu rumah tangga, atau tulis 'Tidak ada'"></div>
+      <div class="field"><label>Nama Ayah</label><input id="f-namaayah" value="${state.id.namaAyah}" placeholder="Nama ayah/wali"></div>
+      <div class="field"><label>Pekerjaan Ayah</label><input id="f-pekerjaanayah" value="${state.id.pekerjaanAyah}" placeholder="Contoh: Wiraswasta"></div>
+      <div class="field"><label>Nama Ibu</label><input id="f-namaibu" value="${state.id.namaIbu}" placeholder="Nama ibu/wali"></div>
+      <div class="field"><label>Pekerjaan Ibu</label><input id="f-pekerjaanibu" value="${state.id.pekerjaanIbu}" placeholder="Contoh: Ibu rumah tangga"></div>
     </div>
-    <div class="field"><label>Alamat</label><input id="f-alamat" value="${state.id.alamat}" placeholder="Alamat tempat tinggal, atau tulis 'Tidak ada'"></div>
+    <div class="field"><label>Alamat</label><input id="f-alamat" value="${state.id.alamat}" placeholder="Alamat tempat tinggal"></div>
 
     <h2 style="font-size:18px;margin-top:20px;">Inspirasi cita-cita</h2>
     <p class="sub">Diisi terpisah dari data orang tua, karena inspirasi cita-cita tidak selalu berasal dari ayah/ibu.</p>
@@ -340,7 +340,7 @@ function renderIdentitas(){
     node.addEventListener("change", ()=>{ state.id[key] = node.value; });
   });
   c.querySelector("#next1").addEventListener("click", ()=>{
-    const required = ["nama","absen","kelas","jk","tglLahir"];
+    const required = ["nama","absen","kelas","jk","tglLahir","namaAyah","pekerjaanAyah","namaIbu","pekerjaanIbu","alamat"];
     const missing = required.filter(k=> !state.id[k] || !String(state.id[k]).trim());
     if(missing.length){
       c.querySelector("#id-error").textContent = "Lengkapi dulu semua data identitas sebelum lanjut.";
