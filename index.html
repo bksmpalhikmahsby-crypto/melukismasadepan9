@@ -206,7 +206,7 @@ function isBkMode(){
 
 let state = {
   step: 0,
-  id: { nama:"", panggilan:"", absen:"", kelas:"", jk:"", tglPelaksanaan: new Date().toISOString().slice(0,10), tglLahir:"" },
+  id: { nama:"", panggilan:"", absen:"", kelas:"", jk:"", tglPelaksanaan: new Date().toISOString().slice(0,10), tglLahir:"", namaAyah:"", pekerjaanAyah:"", namaIbu:"", pekerjaanIbu:"", alamat:"", inspirasiCita:"" },
   mode: null,
   pilihan: null,
   jenjang: null,
@@ -306,14 +306,29 @@ function renderIdentitas(){
         <input class="readonly" id="f-usia" value="${usia(state.id.tglLahir, state.id.tglPelaksanaan)}" readonly placeholder="Terisi otomatis">
       </div>
     </div>
+
+    <h2 style="font-size:18px;margin-top:8px;">Data orang tua</h2>
+    <p class="sub">Jika data tidak ada atau tidak berlaku (misalnya sudah tidak ada/tidak diketahui), tulis "Tidak ada".</p>
+    <div class="grid2">
+      <div class="field"><label>Nama Ayah</label><input id="f-namaayah" value="${state.id.namaAyah}" placeholder="Nama ayah/wali, atau tulis 'Tidak ada'"></div>
+      <div class="field"><label>Pekerjaan Ayah</label><input id="f-pekerjaanayah" value="${state.id.pekerjaanAyah}" placeholder="Contoh: Wiraswasta, atau tulis 'Tidak ada'"></div>
+      <div class="field"><label>Nama Ibu</label><input id="f-namaibu" value="${state.id.namaIbu}" placeholder="Nama ibu/wali, atau tulis 'Tidak ada'"></div>
+      <div class="field"><label>Pekerjaan Ibu</label><input id="f-pekerjaanibu" value="${state.id.pekerjaanIbu}" placeholder="Contoh: Ibu rumah tangga, atau tulis 'Tidak ada'"></div>
+    </div>
+    <div class="field"><label>Alamat</label><input id="f-alamat" value="${state.id.alamat}" placeholder="Alamat tempat tinggal, atau tulis 'Tidak ada'"></div>
+
+    <h2 style="font-size:18px;margin-top:20px;">Inspirasi cita-cita</h2>
+    <p class="sub">Diisi terpisah dari data orang tua, karena inspirasi cita-cita tidak selalu berasal dari ayah/ibu.</p>
+    <div class="field"><label>Cita-cita kamu ini terinspirasi dari siapa?</label><input id="f-inspirasi" value="${state.id.inspirasiCita}" placeholder="Contoh: Ayah, Ibu, Kakak, Guru, Tokoh idola, diri sendiri, atau tulis 'Tidak ada'"></div>
+
     <div id="id-error" class="error"></div>
     <div class="actions">
       <span></span>
       <button class="btn primary" id="next1">Lanjut: eksplorasi cita-cita →</button>
     </div>
   `;
-  ["nama","panggilan","absen","kelas","jk","tglpel","tgllahir"].forEach(k=>{
-    const map = {tglpel:"tglPelaksanaan", tgllahir:"tglLahir"};
+  ["nama","panggilan","absen","kelas","jk","tglpel","tgllahir","namaayah","pekerjaanayah","namaibu","pekerjaanibu","alamat","inspirasi"].forEach(k=>{
+    const map = {tglpel:"tglPelaksanaan", tgllahir:"tglLahir", namaayah:"namaAyah", pekerjaanayah:"pekerjaanAyah", namaibu:"namaIbu", pekerjaanibu:"pekerjaanIbu", inspirasi:"inspirasiCita"};
     const key = map[k] || k;
     const node = c.querySelector("#f-"+k);
     node.addEventListener("input", ()=>{
@@ -441,7 +456,17 @@ function renderHasil(){
     <p class="sub">Ini gambaran arah yang sesuai dengan pilihanmu. Diskusikan hasil ini dengan guru BK dan orang tua, ya.</p>
     <div class="idrecap">
       <b>${state.id.nama}</b> (${state.id.panggilan || '-'}) &middot; Kelas ${state.id.kelas} &middot; No. absen ${state.id.absen} &middot; ${state.id.jk}<br>
-      Usia: ${usia(state.id.tglLahir, state.id.tglPelaksanaan) || '-'} &middot; Tanggal pelaksanaan: ${state.id.tglPelaksanaan}
+      Usia: ${usia(state.id.tglLahir, state.id.tglPelaksanaan) || '-'} &middot; Tanggal pelaksanaan: ${state.id.tglPelaksanaan}<br>
+      Alamat: ${state.id.alamat || '-'}
+    </div>
+    <div class="result-block">
+      <div class="result-row"><div class="lbl">Nama Ayah</div><div class="val">${state.id.namaAyah || '-'}</div></div>
+      <div class="result-row"><div class="lbl">Pekerjaan Ayah</div><div class="val">${state.id.pekerjaanAyah || '-'}</div></div>
+      <div class="result-row"><div class="lbl">Nama Ibu</div><div class="val">${state.id.namaIbu || '-'}</div></div>
+      <div class="result-row"><div class="lbl">Pekerjaan Ibu</div><div class="val">${state.id.pekerjaanIbu || '-'}</div></div>
+    </div>
+    <div class="result-block">
+      <div class="result-row"><div class="lbl">Inspirasi cita-cita dari</div><div class="val">${state.id.inspirasiCita || '-'}</div></div>
     </div>
     <div class="result-block">
       <div class="result-row"><div class="lbl">Jenjang lanjutan yang dituju</div><div class="val">${state.jenjang}</div></div>
@@ -467,7 +492,7 @@ function renderHasil(){
   c.querySelector("#back1").addEventListener("click", ()=>{ state.step = 1; render(); });
   c.querySelector("#btn-print").addEventListener("click", ()=> window.print());
   c.querySelector("#btn-restart").addEventListener("click", ()=>{
-    state = { step:0, id:{ nama:"", panggilan:"", absen:"", kelas:"", jk:"", tglPelaksanaan: new Date().toISOString().slice(0,10), tglLahir:"" }, mode:null, pilihan:null, jenjang:null, sekolahUtama:"", sekolahKedua:"", savedKey:null, view:"app" };
+    state = { step:0, id:{ nama:"", panggilan:"", absen:"", kelas:"", jk:"", tglPelaksanaan: new Date().toISOString().slice(0,10), tglLahir:"", namaAyah:"", pekerjaanAyah:"", namaIbu:"", pekerjaanIbu:"", alamat:"", inspirasiCita:"" }, mode:null, pilihan:null, jenjang:null, sekolahUtama:"", sekolahKedua:"", savedKey:null, view:"app" };
     render();
   });
   return c;
@@ -577,7 +602,13 @@ function mapSheetRow(o){
       absen: String(o["Absen"] || ""),
       jk: o["Jenis Kelamin"] || "",
       tglLahir: o["Tanggal Lahir"] || "",
-      tglPelaksanaan: o["Tanggal Pelaksanaan"] || ""
+      tglPelaksanaan: o["Tanggal Pelaksanaan"] || "",
+      alamat: o["Alamat"] || "",
+      namaAyah: o["Nama Ayah"] || "",
+      pekerjaanAyah: o["Pekerjaan Ayah"] || "",
+      namaIbu: o["Nama Ibu"] || "",
+      pekerjaanIbu: o["Pekerjaan Ibu"] || "",
+      inspirasiCita: o["Inspirasi Cita-cita"] || ""
     },
     mode: o["Mode"] || "",
     jenjang: o["Jenjang Lanjutan"] || "",
@@ -615,12 +646,18 @@ async function loadRekap(c){
     }
     status.innerHTML = `
       <table class="rekap">
-        <thead><tr><th class="no-print">Hapus</th><th>Nama</th><th>Kelas</th><th>Absen</th><th>JK</th><th>Usia</th><th>Jenjang lanjutan</th><th>Sekolah pilihan utama</th><th>Sekolah pilihan kedua</th><th>${'Cita-cita / minat'}</th><th>SMA</th><th>SMK</th><th>Kedinasan</th><th>Pondok</th><th>Kuliah</th></tr></thead>
+        <thead><tr><th class="no-print">Hapus</th><th>Nama</th><th>Kelas</th><th>Absen</th><th>JK</th><th>Usia</th><th>Alamat</th><th>Nama Ayah</th><th>Pekerjaan Ayah</th><th>Nama Ibu</th><th>Pekerjaan Ibu</th><th>Inspirasi Cita-cita</th><th>Jenjang lanjutan</th><th>Sekolah pilihan utama</th><th>Sekolah pilihan kedua</th><th>${'Cita-cita / minat'}</th><th>SMA</th><th>SMK</th><th>Kedinasan</th><th>Pondok</th><th>Kuliah</th></tr></thead>
         <tbody>
           ${rows.map(r=>`<tr data-sid="${r.submissionId}">
             <td class="no-print"><button class="linklike btn-del-row" style="color:var(--error);" data-sid="${r.submissionId}" data-nama="${r.id.nama}">Hapus</button></td>
             <td>${r.id.nama}</td><td>${r.id.kelas}</td><td>${r.id.absen}</td><td>${r.id.jk}</td>
             <td>${usia(r.id.tglLahir, r.id.tglPelaksanaan)}</td>
+            <td>${r.id.alamat||'-'}</td>
+            <td>${r.id.namaAyah||'-'}</td>
+            <td>${r.id.pekerjaanAyah||'-'}</td>
+            <td>${r.id.namaIbu||'-'}</td>
+            <td>${r.id.pekerjaanIbu||'-'}</td>
+            <td>${r.id.inspirasiCita||'-'}</td>
             <td>${r.jenjang||'-'}</td>
             <td>${r.sekolahUtama||'-'}</td>
             <td>${r.sekolahKedua||'-'}</td>
@@ -765,8 +802,8 @@ async function loadAnalisis(c){
 }
 
 function downloadXLSX(rows){
-  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Jenjang Lanjutan","Sekolah Pilihan Utama","Sekolah Pilihan Kedua","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
-  const data = rows.map(r=> [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.jenjang||"", r.sekolahUtama||"", r.sekolahKedua||"", r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul]);
+  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Alamat","Nama Ayah","Pekerjaan Ayah","Nama Ibu","Pekerjaan Ibu","Inspirasi Cita-cita","Jenjang Lanjutan","Sekolah Pilihan Utama","Sekolah Pilihan Kedua","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
+  const data = rows.map(r=> [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.id.alamat||"", r.id.namaAyah||"", r.id.pekerjaanAyah||"", r.id.namaIbu||"", r.id.pekerjaanIbu||"", r.id.inspirasiCita||"", r.jenjang||"", r.sekolahUtama||"", r.sekolahKedua||"", r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul]);
   if(typeof XLSX === "undefined"){ toast("Gagal memuat modul Excel, coba muat ulang halaman."); return; }
   const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
   const wb = XLSX.utils.book_new();
@@ -775,10 +812,10 @@ function downloadXLSX(rows){
 }
 
 function downloadCSV(rows){
-  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Jenjang Lanjutan","Sekolah Pilihan Utama","Sekolah Pilihan Kedua","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
+  const headers = ["Nama","Panggilan","Kelas","Absen","Jenis Kelamin","Tanggal Lahir","Tanggal Pelaksanaan","Usia","Alamat","Nama Ayah","Pekerjaan Ayah","Nama Ibu","Pekerjaan Ibu","Inspirasi Cita-cita","Jenjang Lanjutan","Sekolah Pilihan Utama","Sekolah Pilihan Kedua","Mode","Cita-cita/Minat","Kategori","SMA","SMK","Kedinasan","Pondok","Kuliah"];
   const lines = [headers.join(",")];
   rows.forEach(r=>{
-    const vals = [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.jenjang||"", r.sekolahUtama||"", r.sekolahKedua||"", r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul];
+    const vals = [r.id.nama, r.id.panggilan, r.id.kelas, r.id.absen, r.id.jk, r.id.tglLahir, r.id.tglPelaksanaan, usia(r.id.tglLahir, r.id.tglPelaksanaan), r.id.alamat||"", r.id.namaAyah||"", r.id.pekerjaanAyah||"", r.id.namaIbu||"", r.id.pekerjaanIbu||"", r.id.inspirasiCita||"", r.jenjang||"", r.sekolahUtama||"", r.sekolahKedua||"", r.mode, r.pilihan.n, r.pilihan.k, r.pilihan.sma, r.pilihan.smk, r.pilihan.ked, r.pilihan.pon, r.pilihan.kul];
     lines.push(vals.map(v=> '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
   });
   const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8;"});
